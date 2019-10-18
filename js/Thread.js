@@ -22,7 +22,7 @@ export default class Thread {
       .catch(err => { throw new Error(err) });
   }
 
-  setShouldRunInBackground(boolean) {
+  static setShouldRunInBackground(boolean) {
     if (Platform.OS === 'ios') throw new Error('setShouldRunInBackground method only implemented for Android')
     ThreadManager.setShouldRunInBackground(boolean)
   }
