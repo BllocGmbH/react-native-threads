@@ -1,6 +1,7 @@
 import {
   NativeModules,
   DeviceEventEmitter,
+  Platform,
 } from 'react-native';
 
 const { ThreadManager } = NativeModules;
@@ -19,6 +20,11 @@ export default class Thread {
         return id;
       })
       .catch(err => { throw new Error(err) });
+  }
+
+  setShouldRunInBackground(boolean) {
+    if (Platform.OS === 'ios') throw new Error('setShouldRunInBackground method only implemented for Android')
+    ThreadManager.setShouldRunInBackground(boolean)
   }
 
   postMessage(message) {

@@ -32,6 +32,9 @@ import okio.Sink;
 public class RNThreadModule extends ReactContextBaseJavaModule implements LifecycleEventListener {
 
   private String TAG = "ThreadManager";
+
+  private boolean shouldRunInBackground = false;
+
   private HashMap<Integer, JSThread> threads;
 
   private ReactApplicationContext reactApplicationContext;
@@ -119,8 +122,16 @@ public class RNThreadModule extends ReactContextBaseJavaModule implements Lifecy
     thread.postMessage(message);
   }
 
-  @Override
-  public void onHostResume() {
+
+  @ReactMethod
+  public void setShouldRunInBackground(boolean shouldRunInBackground) {
+    this.shouldRunInBackground = shouldRunInBackground;
+    if (shouldRunInBackground && paused) resumeThreads();
+    else if (!shouldRunInBackground && paused) pauseThreads();
+  }
+
+  public void resumeThreads() {
+    paused = false;
     new Handler(Looper.getMainLooper()).post(new Runnable() {
       @Override
       public void run() {
@@ -131,16 +142,28 @@ public class RNThreadModule extends ReactContextBaseJavaModule implements Lifecy
     });
   }
 
-  @Override
-  public void onHostPause() {
+  public void pauseThreads() {
+    paused = true;
     new Handler(Looper.getMainLooper()).post(new Runnable() {
       @Override
       public void run() {
         for (int threadId : threads.keySet()) {
           threads.get(threadId).onHostPause();
         }
+        paused = true;
       }
     });
+  }
+
+  boolean paused;
+  @Override
+  public void onHostResume() {
+    resumeThreads();
+  }
+
+  @Override
+  public void onHostPause() {
+    if (!shouldRunInBackground) pauseThreads();
   }
 
   @Override
